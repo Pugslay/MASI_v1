@@ -1,8 +1,12 @@
 import tkinter as tk
-import sqlite3
+
+from Database import *
+import Database as DB
 
 class GUI:
     def __init__(self, root):
+        db=DB.Database()
+        db.add_params("name_test","test1","zmA", "zmB")
         self.root = root
         self.root.title('MASI Project')
         self.root.geometry('700x600')
@@ -20,14 +24,20 @@ class GUI:
         #creating bar_file
         bar_file = tk.Menu(menu_bar, tearoff=0)
         bar_file.add_command(label="New")
+        bar_file.add_command(label="Change", command=self.change)
+        bar_file.add_command(label="Save", command=self.save)
         bar_file.add_command(label='Exit', command=self.root.destroy)
 
-        operation
 
         menu_bar.add_cascade(label="Plik", menu=bar_file)
-        menu_bar.add_cascade(label="Pomoc", menu=help_menu)
 
         self.root.config(menu=menu_bar)
 
         #self.operation_window = tk.Toplevel(self.root)
         #self.operation_window.pack()
+
+    def save(self):
+        print("save")
+
+    def change(self):
+        print("change")
