@@ -104,12 +104,12 @@ class GUI:
         self.op_var = tk.StringVar()
 
         ttk.Label(self.operation, text="Term A").pack(side=tk.TOP, padx=5)
-        entry_name = ttk.Entry(self.operation, width=20)
-        entry_name.pack(side=tk.TOP, padx=5)
+        self.term_a = ttk.Entry(self.operation, width=20)
+        self.term_a.pack(side=tk.TOP, padx=5)
 
         ttk.Label(self.operation, text="Term B").pack(side=tk.TOP, padx=5)
-        entry_desc = ttk.Entry(self.operation, width=20)
-        entry_desc.pack(side=tk.TOP, padx=5)
+        self.term_b = ttk.Entry(self.operation, width=20)
+        self.term_b.pack(side=tk.TOP, padx=5)
 
         tk.Label(self.operation,text="Operacje:").pack(side=tk.TOP, padx=5)
 
@@ -123,6 +123,8 @@ class GUI:
 
     def sequencing(self):
         print(self.op_var.get())
+        print(self.term_a.get())
+        print(self.term_b.get())
 
         #operacja do wprowadzenia
 
