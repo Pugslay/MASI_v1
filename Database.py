@@ -11,12 +11,15 @@ class Database:
                             Description TEXT NOT NULL,
                             term_A TEXT NOT NULL, 
                             term_B TEXT NOT NULL,
+                            term_P_A TEXT NOT NULL, 
+                            term_P_B TEXT NOT NULL,
+                            OP_P TEXT NOT NULL,
                             OP TEXT NOT NULL)''')
         self.conn.commit()
 
-    def add_params(self, name, desc, a, b, op):
-        self.c.execute("INSERT INTO operations (Name, Description, term_A, term_B, OP) VALUES (?, ?, ?, ?, ?)",
-                       (name, desc, a, b, op))
+    def add_params(self, name, desc, a, b, ap, bp, op, op_p):
+        self.c.execute("INSERT INTO operations (Name, Description, term_A, term_B, term_P_A, term_P_B, OP_P, OP) VALUES (?, ?, ?, ?, ?,?,?,?)",
+                       (name, desc, a, b,ap,bp,op_p, op))
         self.conn.commit()
 
     def del_params(self, name):

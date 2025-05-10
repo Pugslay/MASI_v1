@@ -1,10 +1,14 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from Database import *
 import Database as DB
+import tkinter.font as tkFont
 
 class GUI:
     def __init__(self, root):
+        self.op_var_p = None
+        self.term_a = None
+        self.term_b = None
         self.operation = None
         self.db = DB.Database()
         self.op_var = None
@@ -12,15 +16,19 @@ class GUI:
         self.root.title('MASI Project')
         self.root.geometry('1000x500')
         self.root.resizable(False, False)
+        self.term_a_var = tk.StringVar()  # Zmienna dla term_a
+        self.term_b_var = tk.StringVar()
+        self.term_b_var_p = tk.StringVar()
+        self.term_a_var_p = tk.StringVar()
+        self.name_entry = tk.StringVar()
+        self.desc_entry = tk.StringVar()
 
-        #creating menu_bar
+        # Creating menu_bar
         menu_bar = tk.Menu(self.root)
 
-        #creating bar_file
+        # Creating bar_file
         bar_file = tk.Menu(menu_bar, tearoff=0)
-        bar_file.add_command(label="New", command=self.newf)
         bar_file.add_command(label="Change", command=self.changef)
-        bar_file.add_command(label="Save", command=self.savef)
         bar_file.add_command(label='Exit', command=self.root.destroy)
         menu_bar.add_cascade(label="File", menu=bar_file)
 
@@ -29,105 +37,273 @@ class GUI:
         main_frame = tk.Frame(root)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        #Left field
-        left_panel = tk.Frame(main_frame, width=600, relief=tk.SUNKEN, borderwidth=1)
-        left_panel.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5, expand=True)
-        tk.Label(left_panel, text="Operations").pack(anchor="w", pady=2)
-
-        #Middle field
+        # Middle field
         text_frame = tk.Frame(main_frame)
-        text_frame.pack(fill=tk.BOTH, expand=False, side=tk.LEFT)
+        text_frame.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
-        text_area = tk.Text(text_frame, wrap="word", font=("Arial",12))
-        scrollbar = tk.Scrollbar(text_frame, command=text_area.yview)
-        text_area.configure(yscrollcommand=scrollbar.set, xscrollcommand=scrollbar.set)
+        self.canvas = tk.Canvas(text_frame, height=100, bg="white")
+        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
-        #Right field
-        side_panel = tk.Frame(main_frame, width=200, height=500)
+        # Right field
+        side_panel = tk.Frame(main_frame)
         side_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
         btn_seq = tk.Button(side_panel, text="Sequencing", command=self.sequencing_button)
-        btn_seq.pack(fill=tk.X, pady=2)
+        btn_seq.pack(pady=5, fill=tk.X)
 
-        tk.Label(side_panel, text="Font").pack(anchor="w", pady=2)
-        font_box = ttk.Combobox(side_panel, values=["Arial", "Courier", "Times New Roman"], state="readonly")
-        font_box.current(0)
-        font_box.pack(fill=tk.X, pady=2)
+        btn_parell = tk.Button(side_panel, text="Parallelism", command=self.parallel_button)
+        btn_parell.pack(pady=5, fill=tk.X)
 
-        tk.Label(side_panel, text="Size").pack(anchor="w", pady=2)
-        size_box = ttk.Combobox(side_panel, values=[10, 12, 14, 16, 18, 20], state="readonly")
-        size_box.current(1)
-        size_box.pack(fill=tk.X, pady=2)
+        # Name label and entry
+        name_label = tk.Label(side_panel, text="Name:")
+        name_label.pack(anchor='w', pady=(10, 0))
+        self.name_entry = tk.Entry(side_panel)
+        self.name_entry.pack(pady=5, fill=tk.X)
 
-        btn_redraw = ttk.Button(side_panel, text="Draw", command=self.draw)
-        btn_redraw.pack(fill=tk.X, pady=2)
+        # Description label and entry
+        desc_label = tk.Label(side_panel, text="Description:")
+        desc_label.pack(anchor='w', pady=(10, 0))
+        self.desc_text = tk.Entry(side_panel)
+        self.desc_text.pack(pady=5, fill=tk.X)
 
-        btn_clear = ttk.Button(side_panel, text="Clear", command=lambda: text_area.delete("1.0", tk.END))
-        btn_clear.pack(fill=tk.X, pady=2)
+        btn_clear = tk.Button(side_panel, text="Save", command=self.savef)
+        btn_clear.pack( pady=5, fill=tk.X)
+
+        btn_clear = tk.Button(side_panel, text="Clear", command=self.clear_canvas)
+        btn_clear.pack( pady=5, fill=tk.X)
 
         bottom_frame = tk.Frame(root)
-        bottom_frame.pack(fill=tk.X, padx=5, pady=5)
-
-        ttk.Label(bottom_frame, text="Name").pack(side=tk.LEFT, padx=5)
-        entry_name = ttk.Entry(bottom_frame, width=20)
-        entry_name.pack(side=tk.LEFT, padx=5)
-
-        ttk.Label(bottom_frame, text="Description").pack(side=tk.LEFT, padx=5)
-        entry_desc = ttk.Entry(bottom_frame, width=100)
-        entry_desc.pack(side=tk.LEFT, padx=5)
-
-
-
+        bottom_frame.pack( padx=5, pady=5, fill=tk.X)
 
     def savef(self):
-        op_var = " "
+        term_a = self.term_a_var.get().strip()
+        term_b = self.term_b_var.get().strip()
+        term_ap = self.term_a_var_p.get().strip()
+        term_bp = self.term_b_var_p.get().strip()
+        operator = self.op_var.get() if self.op_var else ""
+        operator_p = self.op_var_p.get() if self.op_var_p else ""
+
+        name = self.name_entry.get().strip()
+        description = self.desc_text.get().strip()
+
+        # Walidacja danych
+        if not name or not description or not term_a or not term_b or not operator:
+            messagebox.showwarning("Missing Data", "Insert terms before saving.")
+            return
+
+        print("save")
         db = DB.Database()
-        db.add_params("name","desc","zmAa","zmBb",op_var)
+        db.add_params(self.name_entry.get(), self.desc_text.get().strip(), term_a, term_b,term_ap, term_bp, operator, operator_p)
+
+    def clear_canvas(self):
+        self.canvas.delete("all")
+        self.term_a_var_p = tk.StringVar()
+        self.term_b_var_p = tk.StringVar()
+        self.term_a_var = tk.StringVar()
+        self.term_b_var = tk.StringVar()
 
     def changef(self):
         print("change")
+        # Pobierz dane
+        term_a = self.term_a_var.get().strip()
+        term_b = self.term_b_var.get().strip()
 
-    def newf(self):
-        print("newf")
+        if not term_a or not term_b:
+            messagebox.showwarning("Missing Data", "Insert terms before clicking 'Change'.")
+            return
 
-    def draw(self):
-        print("draw")
+        self.operation = tk.Toplevel(self.root)
+        self.operation.title("Change")
+        self.operation.geometry('300x150')
+        self.operation.resizable(False, False)
 
-    def sequencing_button(self):
-        self.operation= tk.Toplevel(self.root)
-        self.operation.title("Sequencing")
-        self.operation.geometry('300x200')
+        # Nagłówek
+        label = ttk.Label(self.operation, text="Swap in Term 1 or Term 2", font=("Arial", 12, "bold"))
+        label.pack(pady=(15, 10))
 
-        self.op_var = tk.StringVar()
+        # Ramka na przyciski
+        button_frame = tk.Frame(self.operation)
+        button_frame.pack(pady=10)
+
+        # Przyciski Term 1 i Term 2
+        button1 = tk.Button(button_frame, command=self.term1, text="Term 1", width=10)
+        button1.pack(side=tk.LEFT, padx=10)
+
+        button2 = tk.Button(button_frame, command=self.term2, text="Term 2", width=10)
+        button2.pack(side=tk.LEFT, padx=10)
+
+    def draw_parallel(self, term_a_p, term_b_p, operator, operator_p):
+        print("draw_parallel")
+        self.canvas.delete("all")
+        term_a = self.term_a_var.get()  # Pobieramy wartość z StringVar
+        term_b = self.term_b_var.get()
+        result = f"{term_a} {operator} {term_b}"
+        font = tkFont.Font(font=("Arial", 12))
+        text_width = font.measure(result)
+
+        margin = 20
+        x1 = 50
+        x2 = x1 + text_width + margin
+        y1 = 20
+        y2 = 80
+        tick_height = 10
+
+        # Rysowanie łuku
+        self.canvas.create_arc(x1, y1, x2, y2, start=0, extent=180, style=tk.ARC, width=2, outline="light blue")
+
+        # Tekst pod łukiem (wyśrodkowany)
+        text_x = (x1 + x2) / 2
+        self.canvas.create_text(text_x, y2 - 35, text=result, font=("Arial", 12))
+
+        x1 = 50
+        y1 = 70
+        y2 = 150
+        x2 = x1 + text_width + 20
+
+        print(term_b_p)
+        self.canvas.create_text(x1 + 10, y1 + 15, text=term_a_p, anchor="w", font=("Arial", 12))
+        self.canvas.create_text(x1 + 10, y1 + 40, text=operator_p, anchor="w", font=("Arial", 12))
+        self.canvas.create_text(x1 + 10, y1 + 65, text=term_b_p, anchor="w", font=("Arial", 12))
+
+        self.canvas.create_line(x1, y1, x1, y2, width=2)
+        self.canvas.create_line(x1 - 10, y1, x1 + 10, y1, width=2)
+        self.canvas.create_line(x1 - 10, y2, x1 + 10, y2, width=2)
+
+    def term1(self):
+        term_a = self.term_a_var.get()
+        term_b = self.term_b_var.get()
+        operator = self.op_var.get()
+        operator_p = self.op_var_p.get()
+        term_a_p = self.term_a_var_p.get()
+        term_b_p = self.term_b_var_p.get()
+        term_a_p = f"{term_a_p}: {term_a} {operator} {term_b}"
+
+        # Wyświetlamy na canvas
+        self.draw_parallel(term_a_p, term_b_p, operator, operator_p)
+
+        self.operation.destroy()
+
+    def term2(self):
+        term_a = self.term_a_var.get()
+        term_b = self.term_b_var.get()
+        operator = self.op_var.get()
+        operator_p = self.op_var_p.get()
+
+        term_b_p = self.term_b_var_p.get()
+        term_a_p = self.term_a_var_p.get()
+        term_b_p = f"{term_b_p}: {term_a} {operator} {term_b}"
+
+        # Wyświetlamy na canvas
+        self.draw_parallel(term_a_p, term_b_p, operator, operator_p)
+
+        self.operation.destroy()
+    def parallel_button(self):
+        print("parallel")
+        self.operation = tk.Toplevel(self.root)
+        self.operation.title("Parallelism")
+        self.operation.geometry('150x200')
+
+        self.op_var_p = tk.StringVar(value=";")
 
         ttk.Label(self.operation, text="Term A").pack(side=tk.TOP, padx=5)
-        self.term_a = ttk.Entry(self.operation, width=20)
+        self.term_a = ttk.Entry(self.operation, width=20, textvariable=self.term_a_var_p)  # Używamy StringVar
         self.term_a.pack(side=tk.TOP, padx=5)
 
         ttk.Label(self.operation, text="Term B").pack(side=tk.TOP, padx=5)
-        self.term_b = ttk.Entry(self.operation, width=20)
+        self.term_b = ttk.Entry(self.operation, width=20, textvariable=self.term_b_var_p)  # Używamy StringVar
         self.term_b.pack(side=tk.TOP, padx=5)
 
-        tk.Label(self.operation,text="Operacje:").pack(side=tk.TOP, padx=5)
+        tk.Label(self.operation, text="Operacje:").pack(side=tk.TOP, padx=5)
+
+        radio1 = tk.Radiobutton(self.operation, variable=self.op_var_p, value=";", text=";")
+        radio1.pack(side=tk.TOP)
+        radio2 = tk.Radiobutton(self.operation, variable=self.op_var_p, value=",", text=",")
+        radio2.pack(side=tk.TOP, pady=5)
+
+        add_button = tk.Button(self.operation, command=self.parallel, text="ADD")
+        add_button.pack(side=tk.TOP)
+
+    def sequencing_button(self):
+        self.operation = tk.Toplevel(self.root)
+        self.operation.title("Sequencing")
+        self.operation.geometry('150x200')
+
+        self.op_var = tk.StringVar(value=";")
+
+        ttk.Label(self.operation, text="Term A").pack(side=tk.TOP, padx=5)
+        self.term_a = ttk.Entry(self.operation, width=20, textvariable=self.term_a_var)  # Używamy StringVar
+        self.term_a.pack(side=tk.TOP, padx=5)
+
+        ttk.Label(self.operation, text="Term B").pack(side=tk.TOP, padx=5)
+        self.term_b = ttk.Entry(self.operation, width=20, textvariable=self.term_b_var)  # Używamy StringVar
+        self.term_b.pack(side=tk.TOP, padx=5)
+
+        tk.Label(self.operation, text="Operacje:").pack(side=tk.TOP, padx=5)
 
         radio1 = tk.Radiobutton(self.operation, variable=self.op_var, value=";", text=";")
         radio1.pack(side=tk.TOP)
         radio2 = tk.Radiobutton(self.operation, variable=self.op_var, value=",", text=",")
-        radio2.pack(side=tk.TOP)
+        radio2.pack(side=tk.TOP, pady=5)
 
-        add_button = tk.Button(self.operation,command=self.sequencing, text="ADD")
-        add_button.pack(side=tk.RIGHT)
+        add_button = tk.Button(self.operation, command=self.sequencing, text="ADD")
+        add_button.pack(side=tk.TOP)
 
-    def sequencing(self):
-        print(self.op_var.get())
-        print(self.term_a.get())
-        print(self.term_b.get())
+    def parallel(self):
+        print("parallel")
+        term_a_p = self.term_a_var_p.get()  # Pobieramy wartość z StringVar
+        term_b_p = self.term_b_var_p.get()
+        operator = self.op_var_p.get()
 
-        #operacja do wprowadzenia
+        result = f"{term_a_p} {operator} {term_b_p}"
+
+        font = tkFont.Font(font=("Arial", 12))
+        text_width = font.measure(result)
+
+        margin = 20
+        x1 = 50
+        y1 = 70
+        y2 = 150
+        tick_height = 10
+
+        self.canvas.create_text(x1 + 10, y1 + 15, text=term_a_p, anchor="w", font=("Arial", 12))
+        self.canvas.create_text(x1 + 10, y1 + 40, text=operator, anchor="w", font=("Arial", 12))
+        self.canvas.create_text(x1 + 10, y1 + 65, text=term_b_p, anchor="w", font=("Arial", 12))
+
+        self.canvas.create_line(x1, y1, x1, y2, width=2)
+        self.canvas.create_line(x1-10, y1, x1+10, y1, width=2)  # lewa wypustka
+        self.canvas.create_line(x1-10, y2, x1+10, y2, width=2)  # prawa wypustka
 
         self.operation.destroy()
 
+    def sequencing(self):
+        term_a = self.term_a_var.get()  # Pobieramy wartość z StringVar
+        term_b = self.term_b_var.get()  # Pobieramy wartość z StringVar
+        operator = self.op_var.get()
+
+        # Tekst wyrażenia
+        result = f"{term_a} {operator} {term_b}"
+        #self.text_area.insert(tk.END, result + "\n")
+
+
+        # Oblicz szerokość tekstu
+        font = tkFont.Font(font=("Arial", 12))
+        text_width = font.measure(result)
+
+        # Współrzędne dla łuku - dynamicznie dopasowane
+        margin = 20
+        x1 = 50
+        x2 = x1 + text_width + margin
+        y1 = 20
+        y2 = 80
+        tick_height = 10
+
+        # Rysowanie łuku
+        self.canvas.create_arc(x1, y1, x2, y2, start=0, extent=180, style=tk.ARC, width=2, outline="light blue")
+
+        # Tekst pod łukiem (wyśrodkowany)
+        text_x = (x1 + x2) / 2
+        self.canvas.create_text(text_x, y2 - 35, text=result, font=("Arial", 12))
+
+        self.operation.destroy()
 
