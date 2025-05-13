@@ -139,9 +139,9 @@ class GUI:
                            operator, operator_p)
 
     def loadf(self):
-        print("load")
+        #print("load")
         names = self.db.get_names()
-        print(names)
+        #print(names)
         self.load = tk.Toplevel(self.root)
         self.load.title("Change")
         self.load.geometry('300x500')
@@ -161,7 +161,7 @@ class GUI:
                 index = selection[0]
                 name = names[index]
                 data = self.db.get_data(name[0],name[1])
-                print(data)
+                #print(data)
                 self.load.destroy()
                 self.draw_alt(data)
 
@@ -208,7 +208,7 @@ class GUI:
         term_b_p = self.term_b_var_p.get()
         result = f"  {term_a}  {operator}  {term_b}"
 
-        print(result)
+        #print(result)
         font = tkFont.Font(font=("Arial", 12))
 
 
@@ -218,7 +218,7 @@ class GUI:
         y2 = 80
 
         if bul:
-            print(bul)
+            #print(bul)
             result = f"  {term_a} {operator} {term_b}"
             text_width = font.measure(result)
             x2 = x1 + text_width + margin
@@ -235,7 +235,7 @@ class GUI:
             self.canvas.create_line(x1 + 15, y2+21, x1 + 30, y2+21, width=2)
 
         else:
-            print(bul)
+            #print(bul)
             result = f"{term_a} {operator}  {term_b}"
             text_width = font.measure(result)
             text_fragment = f"  {term_a} {operator}"
@@ -398,8 +398,8 @@ class GUI:
         self.sequencing()
         self.parallel()
 
-        print("data")
-        print(type(data))
+        #print("data")
+        #print(type(data))
 
 
 
