@@ -2,6 +2,7 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkFont
+from xml.etree.ElementTree import tostring
 
 
 # Klasa zarządzająca bazą danych
@@ -36,6 +37,14 @@ class Database:
 
     def get_params(self):
         self.c.execute("SELECT * FROM operations")
+        return self.c.fetchall()
+
+    def get_names(self):
+        self.c.execute("SELECT Name, Description FROM operations")
+        return self.c.fetchall()
+
+    def get_data(self, name, desc):
+        self.c.execute("SELECT term_A, term_B, term_P_A, term_P_B, OP_P, OP FROM operations WHERE name IS ? AND Description IS ?", (name,desc))
         return self.c.fetchall()
 
 
@@ -106,6 +115,9 @@ class GUI:
         btn_clear = tk.Button(side_panel, text="Clear", command=self.clear_canvas)
         btn_clear.pack(pady=5, fill=tk.X)
 
+        btn_clear = tk.Button(side_panel, text="Load", command=self.loadf)
+        btn_clear.pack(pady=5, fill=tk.X)
+
     # Funkcja zapisująca dane
     def savef(self):
         term_a = self.term_a_var.get().strip()
@@ -126,6 +138,35 @@ class GUI:
         self.db.add_params(self.name_entry.get(), self.desc_text.get().strip(), term_a, term_b, term_ap, term_bp,
                            operator, operator_p)
 
+    def loadf(self):
+        print("load")
+        names = self.db.get_names()
+        print(names)
+        self.load = tk.Toplevel(self.root)
+        self.load.title("Change")
+        self.load.geometry('300x500')
+        self.load.resizable(False, False)
+
+        label = ttk.Label(self.load, text="Load data:", font=("Arial", 12, "bold"))
+        label.pack(pady=(15, 10))
+
+        listbox = tk.Listbox(self.load, height=6)
+        for name in names:
+            listbox.insert(tk.END, str(name))
+        listbox.pack()
+
+        def on_select(event):
+            selection = listbox.curselection()
+            if selection:
+                index = selection[0]
+                name = names[index]
+                data = self.db.get_data(name[0],name[1])
+                print(data)
+                self.load.destroy()
+                self.draw_alt(data)
+
+        listbox.bind("<<ListboxSelect>>", on_select)
+
     # Funkcja czyszcząca pole rysunkowe
     def clear_canvas(self):
         self.canvas.delete("all")
@@ -143,15 +184,15 @@ class GUI:
             messagebox.showwarning("Missing Data", "Insert terms before clicking 'Change'.")
             return
 
-        self.operation = tk.Toplevel(self.root)
-        self.operation.title("Change")
-        self.operation.geometry('300x150')
-        self.operation.resizable(False, False)
+        self.change = tk.Toplevel(self.root)
+        self.change.title("Change")
+        self.change.geometry('300x150')
+        self.change.resizable(False, False)
 
-        label = ttk.Label(self.operation, text="Swap in Term 1 or Term 2", font=("Arial", 12, "bold"))
+        label = ttk.Label(self.change, text="Swap in Term 1 or Term 2", font=("Arial", 12, "bold"))
         label.pack(pady=(15, 10))
 
-        button_frame = tk.Frame(self.operation)
+        button_frame = tk.Frame(self.change)
         button_frame.pack(pady=10)
 
         button1 = tk.Button(button_frame, command=self.term1, text="Term 1", width=10)
@@ -167,9 +208,6 @@ class GUI:
         term_b_p = self.term_b_var_p.get()
         result = f"  {term_a}  {operator}  {term_b}"
 
-#        bbox = self.canvas.bbox()
-
-        #bbox[0] =
         print(result)
         font = tkFont.Font(font=("Arial", 12))
 
@@ -192,8 +230,8 @@ class GUI:
             self.canvas.create_text(x1+22, y2 - 15, text=operator_p, anchor="w", font=("Arial", 12))
             self.canvas.create_text(x1+22, y2 + 10, text=term_b_p, anchor="w", font=("Arial", 12))
 
-            self.canvas.create_line(x1 + 15, y1+18, x1 + 15, y2+22, width=2)
-            self.canvas.create_line(x1 + 15, y1+19, x1 + 30, y1+19, width=2)
+            self.canvas.create_line(x1 + 15, y1+16, x1 + 15, y2+22, width=2)
+            self.canvas.create_line(x1 + 15, y1+16, x1 + 30, y1+16, width=2)
             self.canvas.create_line(x1 + 15, y2+21, x1 + 30, y2+21, width=2)
 
         else:
@@ -211,8 +249,8 @@ class GUI:
             self.canvas.create_text(x1+text_frag_width+12, y2 - 15, text=operator_p, anchor="w", font=("Arial", 12))
             self.canvas.create_text(x1+text_frag_width+12, y2 + 10, text=term_b_p, anchor="w", font=("Arial", 12))
 
-            self.canvas.create_line(x1+text_frag_width+8, y1+18, x1+text_frag_width+8, y2+22, width=2)
-            self.canvas.create_line(x1+text_frag_width+8, y1+19, x1+text_frag_width+16, y1+19, width=2)
+            self.canvas.create_line(x1+text_frag_width+8, y1+15, x1+text_frag_width+8, y2+22, width=2)
+            self.canvas.create_line(x1+text_frag_width+8, y1+16, x1+text_frag_width+16, y1+16, width=2)
             self.canvas.create_line(x1+text_frag_width+8, y2+21, x1+text_frag_width+16, y2+21, width=2)
 
         x1 = 50
@@ -237,7 +275,7 @@ class GUI:
         term_a = self.term_a_var.get()
 
         self.draw(term_a_p, term_b, operator, operator_p, True)
-        self.operation.destroy()
+        self.change.destroy()
 
     def term2(self):
         term_a_p = self.term_a_var_p.get()
@@ -248,7 +286,7 @@ class GUI:
         term_a = self.term_a_var.get()
 
         self.draw(term_a, term_a_p, operator, operator_p, False)
-        self.operation.destroy()
+        self.change.destroy()
 
     # Funkcja dla operacji równoległej
     def parallel_button(self):
@@ -320,7 +358,9 @@ class GUI:
         self.canvas.create_line(x1 - 10, y1, x1 + 10, y1, width=2)
         self.canvas.create_line(x1 - 10, y2, x1 + 10, y2, width=2)
 
-        self.operation.destroy()
+        if self.operation is not None:
+            self.operation.destroy()
+            self.operation = None
 
     def sequencing(self):
         self.canvas.delete("seq")
@@ -344,6 +384,25 @@ class GUI:
         text_x = (x1 + x2) / 2
         self.canvas.create_text(text_x, y2 - 35, text=result, font=("Arial", 12), tags='seq')
 
-        self.operation.destroy()
+        if self.operation is not None:
+            self.operation.destroy()
+
+    def draw_alt(self, data):
+        self.term_a_var=tk.StringVar(self.root, value = data[0][0])
+        self.term_b_var=tk.StringVar(self.root, value = data[0][1])
+        self.term_a_var_p=tk.StringVar(self.root, value = data[0][2])
+        self.term_b_var_p=tk.StringVar(self.root, value = data[0][3])
+        self.op_var_p=tk.StringVar(self.root, value = data[0][4])
+        self.op_var=tk.StringVar(self.root, value = data[0][5])
+
+        self.sequencing()
+        self.parallel()
+
+        print("data")
+        print(type(data))
+
+
+
+
 
 
