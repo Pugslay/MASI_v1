@@ -2,7 +2,6 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkFont
-from xml.etree.ElementTree import tostring
 
 
 # Klasa zarządzająca bazą danych
